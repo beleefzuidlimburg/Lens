@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lamp-ontwerp</title>
+<style>
+:root{--bg:#f3f6f9;--fg:#14202b;--mut:#5d6b78;--card:#fff;--ln:#d3dce5;--pc:#9fd0f2;--ray:#e39b00;--pcb:#1c2630;--cab:#d1503a;--ac:#1f6fb2;--warn:#b3361f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#10171e;--fg:#e6edf3;--mut:#93a1ae;--card:#18222c;--ln:#2b3946;--pc:#3c7aa8;--ray:#ffc233;--pcb:#cfd8e0;--cab:#f0735c;--ac:#6db3ee;--warn:#ff8a73}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#10171e;--fg:#e6edf3;--mut:#93a1ae;--card:#18222c;--ln:#2b3946;--pc:#3c7aa8;--ray:#ffc233;--pcb:#cfd8e0;--cab:#f0735c;--ac:#6db3ee;--warn:#ff8a73}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 Georgia,"Iowan Old Style",serif;padding:12px 14px 28px;max-width:640px;margin-inline:auto}
+h1{font-size:20px;margin:6px 0 2px}
+p.s{margin:0 0 10px;color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:8px;margin-bottom:10px}
+svg{display:block;width:100%;height:auto}
+#warn{color:var(--warn);font-size:13px;margin:0 0 10px;padding-left:18px}
+#warn:empty{display:none}
+#stat,#fst{font-size:13.5px;margin:4px 2px 0}
+#pdf,#dxf{width:100%;padding:11px;margin:0 0 10px;border:0;border-radius:10px;background:var(--ac);color:#fff;font:600 15px system-ui,sans-serif}
+fieldset{border:1px solid var(--ln);border-radius:10px;margin:0 0 10px;padding:6px 10px 8px;background:var(--card)}
+legend{font-weight:bold;padding:0 6px;font-size:14px}
+label{display:block;font:13px system-ui,sans-serif;margin-top:7px}
+label b{float:right;font-weight:600;color:var(--ac)}
+input[type=range]{width:100%;margin:2px 0 0;accent-color:var(--ac)}
+p.n{margin:0 0 10px;color:var(--mut);font-size:13px}
+table{width:100%;border-collapse:collapse;font:13.5px system-ui,sans-serif}
+td,th{padding:4px 6px;text-align:right;border-bottom:1px solid var(--ln)}
+td:first-child,th:first-child{text-align:left}
+#s_warn{color:var(--warn);font-size:13px;margin:0 0 10px;padding-left:18px}
+#s_warn:empty{display:none}
+select,textarea{width:100%;font:14px system-ui,sans-serif;padding:7px;margin-top:3px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:8px}
+.rg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rg input{width:100%;font:14px system-ui,sans-serif;padding:6px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:8px}
+#s_csv{width:100%;padding:11px;border:0;border-radius:10px;background:var(--ac);color:#fff;font:600 15px system-ui,sans-serif}
+.tb{display:flex;gap:6px;margin:6px 0 10px}.tb button{flex:1;padding:9px;border:1px solid var(--ln);border-radius:10px;background:var(--card);color:var(--fg);font:600 14px system-ui,sans-serif}.tb button[aria-pressed=true]{background:var(--ac);color:#fff;border-color:var(--ac)}
+</style></head><body>
+<h1 style="font-size:20px;margin:6px 0 2px">Lamp-ontwerp</h1>
+<div class="tb"><button onclick="tab(1)" aria-pressed="true">Vorm en lichtbundel</button><button onclick="tab(2)" aria-pressed="false">Spectrum</button></div>
+<div id="tab1">
+
+<p class="s">2D-doorsnede van de geëxtrudeerde buis. Licht langs de buis verandert niet, dus de doorsnede zegt alles over de bundel.</p>
+<div class="card"><svg id="sec" role="img" aria-label="Doorsnede met lichtstralen"></svg></div>
+<ul id="warn"></ul>
+<div class="card"><svg id="cht" viewBox="0 0 320 130" role="img" aria-label="Lichtverdeling per hoek"></svg><p id="stat"></p></div>
+<div class="card"><svg id="flr" viewBox="0 0 320 240" role="img" aria-label="Lichtvlek op de vloer"></svg><p id="fst"></p></div>
+<button id="pdf" hidden>Download PDF-rapport</button>
+<button id="dxf" hidden>Download buisprofiel (DXF in zip)</button>
+<div id="ui"></div>
+</div>
+<div id="tab2" hidden>
+<p class="s">Los van de vormtool: wat blijft er van het LED-spectrum over na het materiaal? Het is een model, geen meting.</p>
+<div class="card"><svg id="s_ch" viewBox="0 0 320 170" role="img" aria-label="Spectrum voor en na het materiaal"></svg></div>
+<div class="card" id="s_res"></div>
+<ul id="s_warn"></ul>
+<fieldset><legend>LED-spectrum</legend>
+<label>Voorbeeld of eigen data<select id="s_pre"><option value="warm">Warm voorbeeld</option><option value="neu">Neutraal voorbeeld</option><option value="cool">Koel voorbeeld</option><option value="own">Eigen spectrum (hieronder)</option></select></label>
+<label>Eigen spectrum: nm en waarde, één punt per regel<textarea id="s_sp" rows="5" placeholder="450 0.82&#10;455 0.95&#10;..."></textarea></label>
+</fieldset>
+<fieldset><legend>Materiaal (polycarbonaat)</legend>
+<label><input type="checkbox" id="s_link" checked style="width:auto"> Dikte uit de vormtool overnemen (lens in het midden, of de wand bij gewone buis en reflector)</label>
+<label>Dikte in het materiaal (mm)<b></b><input type="range" id="s_t" min="0.5" max="6" step="0.1" value="1.5"></label>
+<label>Hoeken gemiddeld tot (graden)<b></b><input type="range" id="s_tm" min="0" max="80" step="1" value="40"></label>
+<label>Vergeling door veroudering<b></b><input type="range" id="s_y" min="0" max="1" step="0.05" value="0"></label>
+<label>Eigen doorlaat van je materiaal: nm en %, optioneel<textarea id="s_tr" rows="3" placeholder="380 5&#10;400 78&#10;..."></textarea></label>
+</fieldset>
+<fieldset><legend>R-waarden van de LED (datasheet)</legend><div class="rg" id="s_rg"></div>
+<p class="n" style="margin:8px 0 0">Ze komen in het overzicht te staan. Uitrekenen wat ze na de buis worden kan hier niet: daarvoor zijn de CIE-testkleuren nodig.</p></fieldset>
+<button id="s_csv" hidden>Download uitgangsspectrum (CSV)</button>
+</div>
+<script>
+const FB={save:async({filename:n,data:d})=>{const bl=d instanceof Blob?d:new Blob([d]),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return{status:'saved'}}};
+
+const G=[
+['Buis',[['D','Buitendiameter (mm)',10,30,.5,20],['t','Wanddikte buis (mm)',.8,4,.1,1.5],['n','Brekingsindex polycarbonaat',1.5,1.65,.005,1.585]]],
+['Printplaat en LED',[['ph','Hoogte printplaat t.o.v. midden (mm)',-8,8,.1,1],['pw','Breedte printplaat (mm)',4,30,.5,14],['lw','Breedte LED-vlak (mm)',.5,8,.5,3]]],
+['Lens (onderkant)',[['d0','Dikte lens in het midden (mm)',.8,6,.1,2.5],['a','Kromming binnenkant',-.06,.2,.005,.02],['ch','Hoogte V-kegel in midden (mm)',0,4,.1,1.2],['cw','Halve breedte V-kegel (mm)',1,9,.5,4]]],
+['Reflector',[['rh','Hoogte reflector (mm)',1,10,.1,5],['ro','Opening onderkant, halve breedte (mm)',1,10,.1,5]]],['Kabels',[['nc','Aantal kabels',0,8,1,4],['cd','Kabeldikte (mm)',.8,3,.1,1.6]]],['Vloer',[['H','Afstand lamp tot vloer (m)',.5,4,.1,2.5],['W','Breedte vloeroppervlak (m)',.5,8,.1,3]]]];
+const P={M:0},ui=document.getElementById('ui');
+{const f=document.createElement('fieldset');f.innerHTML='<legend>Uitvoering</legend><select style="width:100%;font:15px system-ui,sans-serif;padding:8px;margin:4px 0"><option value="0">Batwing-lens (geëxtrudeerd)</option><option value="1">Gewone buis (geen lens)</option><option value="2">Reflector rond de LED + gewone buis</option></select>';ui.appendChild(f);f.querySelector('select').onchange=e=>{P.M=+e.target.value;vis();q()}}
+G.forEach(([t,L])=>{const f=document.createElement('fieldset');f.dataset.g=t;f.innerHTML='<legend>'+t+'</legend>';
+L.forEach(([k,l,mn,mx,st,v])=>{P[k]=v;const e=document.createElement('label');
+e.innerHTML=l+'<b>'+v+'</b><input type="range" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+v+'">';
+e.querySelector('input').oninput=ev=>{P[k]=+ev.target.value;e.querySelector('b').textContent=P[k];q()};f.appendChild(e)});ui.appendChild(f)});vis();
+function vis(){document.querySelectorAll('fieldset[data-g]').forEach(f=>{const g=f.dataset.g;f.hidden=(g==='Lens (onderkant)'&&P.M!==0)||(g==='Reflector'&&P.M!==2)})}
+let pend=0;function q(){if(!pend){pend=1;requestAnimationFrame(()=>{pend=0;run()})}}
+let seed=1;function gr(){seed=(seed*1664525+1013904223)>>>0;const a=(seed+1)/4294967297;seed=(seed*1664525+1013904223)>>>0;const b=seed/4294967296;return Math.max(-3,Math.min(3,Math.sqrt(-2*Math.log(a))*Math.cos(6.2831853*b)))}
+function pert(nx,ny,dx,dy,s){if(!s)return[nx,ny];const a=gr()*s*Math.PI/180,c=Math.cos(a),n=Math.sin(a),px=nx*c-ny*n,py=nx*n+ny*c;return -(dx*px+dy*py)<.05?[nx,ny]:[px,py]}
+function segHit(x,y,dx,dy,s){const ex=s[2]-s[0],ey=s[3]-s[1],den=dx*ey-dy*ex;if(Math.abs(den)<1e-9)return -1;const wx=s[0]-x,wy=s[1]-y,t=(wx*ey-wy*ex)/den,u=(wx*dy-wy*dx)/den;return u>=0&&u<=1?t:-1}
+function refr(dx,dy,nx,ny,eta){const ci=-(dx*nx+dy*ny),k=1-eta*eta*(1-ci*ci);if(k<0)return null;const b=eta*ci-Math.sqrt(k);return[eta*dx+b*nx,eta*dy+b*ny]}
+function hit(x,y,dx,dy,f,mx){const c=f(x,y);let s=0;while(s<mx){const s2=s+.05;if(f(x+dx*s2,y+dy*s2)!==c){let lo=s,hi=s2;for(let i=0;i<14;i++){const m=(lo+hi)/2;if(f(x+dx*m,y+dy*m)!==c)hi=m;else lo=m}return hi}s=s2}return -1}
+function run(){
+const R=P.D/2,ri=R-P.t,n=P.n,W=[];
+const yin=x=>{if(P.M!==0)return -1e3;const a=Math.abs(x);return -R+P.d0+P.a*x*x+(a<P.cw?P.ch*(1-a/P.cw):0)};
+const dyin=x=>{const a=Math.abs(x);return 2*P.a*x-(a<P.cw?Math.sign(x)*P.ch/P.cw:0)};
+const cav=(x,y)=>x*x+y*y<ri*ri&&y>yin(x);
+const inS=(x,y)=>x*x+y*y<R*R;
+const pb=P.ph-.8,pt=P.ph+.8;const rS=[];if(P.M===2){const rt=P.lw/2;rS.push([-rt,pb,-P.ro,pb-P.rh],[rt,pb,P.ro,pb-P.rh])}
+function trace(x0,u){
+ let dx=u,dy=-Math.sqrt(1-u*u),x=x0,y=pb-.001;const pts=[[x,y]];
+ if(!cav(x,y))return null;
+ let L,refl=0;for(;;){L=hit(x,y,dx,dy,cav,60);if(L<0)return null;let best=L,bs=null;for(const sg of rS){const t=segHit(x,y,dx,dy,sg);if(t>1e-4&&t<best){best=t;bs=sg}}if(!bs)break;if(++refl>6)return null;x+=dx*best;y+=dy*best;pts.push([x,y]);const sx=bs[2]-bs[0],sy=bs[3]-bs[1],m=Math.hypot(sx,sy),rx=-sy/m,ry=sx/m,dd=dx*rx+dy*ry;dx-=2*dd*rx;dy-=2*dd*ry;x+=dx*1e-3;y+=dy*1e-3}
+ x+=dx*L;y+=dy*L;pts.push([x,y]);
+ let nx,ny;
+ if(x*x+y*y>ri*ri-.02){const r=Math.hypot(x,y);nx=-x/r;ny=-y/r}else{const g=dyin(x),m=Math.hypot(g,1);nx=-g/m;ny=1/m}
+ {const pn=pert(nx,ny,dx,dy,P.si);nx=pn[0];ny=pn[1]}const r1=refr(dx,dy,nx,ny,1/n);if(!r1)return null;dx=r1[0];dy=r1[1];x+=dx*.001;y+=dy*.001;
+ for(let k=0;k<5;k++){
+  L=hit(x,y,dx,dy,inS,60);if(L<0)return null;
+  x+=dx*L;y+=dy*L;pts.push([x,y]);
+  const r=Math.hypot(x,y);nx=-x/r;ny=-y/r;
+  const pn=pert(nx,ny,dx,dy,P.so),t=refr(dx,dy,pn[0],pn[1],n);
+  if(t){dx=t[0];dy=t[1];break}
+  const ci=-(dx*nx+dy*ny);dx+=2*ci*nx;dy+=2*ci*ny;x+=dx*.001;y+=dy*.001;
+  if(k==4)return null}
+ pts.push([x+dx*14,y+dy*14]);
+ return{ang:Math.atan2(dx,-dy)*180/Math.PI,pts,ex:x,ey:y,dx,dy}}
+// histogram
+const B=new Array(36).fill(0),F=new Array(40).fill(0);seed=12345;let N=1200,Win=0,ok=0,out=0;
+for(let i=0;i<N;i++){const u=-.999+1.998*(i+.5)/N,x0=(((i*.618034)%1)-.5)*P.lw,r=trace(x0,u);
+ if(!r)continue;ok++;const a=r.ang;if(a>=-90&&a<90)B[Math.floor((a+90)/5)]++;else out++;if(r.dy<-.01){const fx=(r.ex+r.dx*((-P.H*1000-r.ey)/r.dy))/1000,bi=Math.floor((fx+4)/.2);if(bi>=0&&bi<40)F[bi]++;if(Math.abs(fx)<=P.W/2)Win++}}
+// section drawing
+const sx=v=>v,e2=[];
+let cp='';{let lo=null,hi=null;for(let x=-ri;x<=ri;x+=.05){if(yin(x)<Math.sqrt(Math.max(0,ri*ri-x*x))){if(lo===null)lo=x;hi=x}}
+ if(lo!==null){const lp=[],up=[];for(let x=lo;x<=hi;x+=.1)lp.push(x.toFixed(2)+' '+(-yin(x)).toFixed(2));
+  for(let x=hi;x>=lo;x-=.1)up.push(x.toFixed(2)+' '+(-Math.sqrt(Math.max(0,ri*ri-x*x))).toFixed(2));
+  cp='M'+lp.join('L')+'L'+up.join('L')+'Z'}}
+if(P.M!==0)cp='M'+(-ri)+' 0a'+ri+' '+ri+' 0 1 0 '+2*ri+' 0a'+ri+' '+ri+' 0 1 0 '+(-2*ri)+' 0Z';let s='<path fill-rule="evenodd" fill="var(--pc)" fill-opacity=".85" stroke="var(--ac)" stroke-width=".12" d="M'+(-R)+' 0a'+R+' '+R+' 0 1 0 '+2*R+' 0a'+R+' '+R+' 0 1 0 '+(-2*R)+' 0Z'+cp+'"/>';
+s+='<path d="M-16 0H16M0 -16V24" stroke="var(--ln)" stroke-width=".08" stroke-dasharray=".5 .5"/>';const rays=[];for(let a=-80;a<=80;a+=6.67){const r=trace(0,Math.sin(a*Math.PI/180));if(r)rays.push(r)}
+rays.forEach(r=>{s+='<polyline fill="none" stroke="var(--ray)" stroke-width=".13" stroke-opacity=".8" points="'+r.pts.map(p=>p[0].toFixed(2)+','+(-p[1]).toFixed(2)).join(' ')+'"/>'});
+s+='<rect x="'+(-P.pw/2)+'" y="'+(-pt)+'" width="'+P.pw+'" height="1.6" fill="var(--pcb)"/>';
+s+='<rect x="'+(-P.lw/2)+'" y="'+(-pb)+'" width="'+P.lw+'" height=".35" fill="var(--ray)" stroke="var(--pcb)" stroke-width=".06"/>';
+rS.forEach(g=>{s+='<line x1="'+g[0]+'" y1="'+(-g[1])+'" x2="'+g[2]+'" y2="'+(-g[3])+'" stroke="var(--mut)" stroke-width=".35" stroke-linecap="round"/>'});
+// cables
+const wr=[],cd=P.cd;let placed=0,row=0;
+while(placed<P.nc&&row<6){const cy=pt+cd*.6+row*cd*1.05,room=ri*ri-(cy+cd/2)**2;if(room<=0)break;const cap=Math.floor(2*Math.sqrt(room)/cd);if(cap<1)break;
+ const m=Math.min(cap,P.nc-placed);for(let i=0;i<m;i++){const cx=(i-(m-1)/2)*cd;s+='<circle cx="'+cx.toFixed(2)+'" cy="'+(-cy).toFixed(2)+'" r="'+(cd/2*.93).toFixed(2)+'" fill="var(--cab)"/>'}
+ placed+=m;row++}
+if(placed<P.nc)wr.push('Er passen maar '+placed+' van de '+P.nc+' kabels boven de printplaat. Maak de buis groter of de kabels dunner.');
+const ch=2*Math.sqrt(Math.max(0,ri*ri-pt*pt)),chb=2*Math.sqrt(Math.max(0,ri*ri-pb*pb));
+if(P.pw>Math.min(ch,chb)+.01)wr.push('Printplaat is breder dan de binnenruimte op die hoogte ('+Math.min(ch,chb).toFixed(1)+' mm).');
+if(P.M===2&&Math.hypot(P.ro,pb-P.rh)>ri)wr.push('De reflector steekt buiten de binnenkant van de buis: maak hem korter of smaller.');if(!cav(0,pb-.001))wr.push('De LED zit in het materiaal: verlaag de printplaat of maak de lens dunner.');
+// thickness
+let tmn=99,tmx=0;for(let x=-ri*.95;x<=ri*.95;x+=.1){const inner=Math.max(yin(x),-Math.sqrt(Math.max(0,ri*ri-x*x))),th=inner+Math.sqrt(R*R-x*x);if(th<tmn)tmn=th;if(th>tmx)tmx=th}
+if(P.M!==0){tmn=tmx=P.t}else{tmn=Math.min(tmn,P.t);tmx=Math.max(tmx,P.t)}
+if(tmx/tmn>2.2)wr.push('Wanddikte varieert van '+tmn.toFixed(1)+' tot '+tmx.toFixed(1)+' mm: lastig te extruderen (krimp, vervorming). Streef naar een verschil van minder dan factor 2.');
+if(tmn<.8)wr.push('Dunste wand is '+tmn.toFixed(1)+' mm: erg dun voor polycarbonaat.');
+const vx=R+3,vh=R+3+R+14;
+const sec=document.getElementById('sec');sec.setAttribute('viewBox','-16 -16 32 40');sec.innerHTML=s;
+// chart
+const mx=Math.max(1,...B);let c='<line x1="10" y1="108" x2="310" y2="108" stroke="var(--ln)"/>';
+B.forEach((v,i)=>{const h=v/mx*92;c+='<rect x="'+(10+i*300/36+.6)+'" y="'+(108-h)+'" width="7" height="'+h+'" fill="var(--ac)"/>'});
+[-90,-45,0,45,90].forEach(a=>{const x=10+(a+90)/180*300;c+='<text x="'+x+'" y="123" text-anchor="middle" font-size="9" fill="var(--mut)">'+a+'°</text>'});
+document.getElementById('cht').innerHTML=c;
+// stats
+let pk=0,pi=0;B.forEach((v,i)=>{if(v>pk){pk=v;pi=i}});const pa=pi*5-87.5,mid=(B[17]+B[18])/2/Math.max(1,pk);
+let lo=-1,hi=-1;B.forEach((v,i)=>{if(v>=pk/2){if(lo<0)lo=i;hi=i}});
+const bat=mid<.75&&Math.abs(pa)>12;
+document.getElementById('stat').innerHTML='<b>'+(bat?'Batwing: ':'Geen batwing: ')+'</b>piek bij '+(pa>0?'+':'')+pa.toFixed(0)+'°, midden is '+Math.round(mid*100)+'% van de piek. Breedte op halve hoogte ca. '+((hi-lo+1)*5)+'°.'+(out+(N-ok-out)>N*.08?' '+Math.round((N-B.reduce((a,b)=>a+b,0))/N*100)+'% van het licht gaat de verkeerde kant op of raakt verloren.':'');
+{const k=40,fy=20+P.H*k,cx=160;let f='<rect x="0" y="'+fy+'" width="320" height="3" fill="var(--mut)"/>';
+ rays.forEach(r=>{if(r.dy<-.01){const fx=(r.ex+r.dx*((-P.H*1000-r.ey)/r.dy))/1000;f+='<line x1="'+cx+'" y1="20" x2="'+(cx+fx*k).toFixed(1)+'" y2="'+fy+'" stroke="var(--ray)" stroke-width=".7" stroke-opacity=".6"/>'}});
+ f+='<circle cx="'+cx+'" cy="20" r="3.5" fill="var(--ac)"/>';f+='<rect x="'+(cx-P.W/2*k)+'" y="'+(fy-1)+'" width="'+P.W*k+'" height="5" fill="var(--ac)"/>';
+ const fm=Math.max(1,...F);F.forEach((v,i)=>{const h=v/fm*40;f+='<rect x="'+(i*8+.5)+'" y="'+(fy+5)+'" width="7" height="'+h+'" fill="var(--ray)"/>'});
+ [-4,-2,0,2,4].forEach(m=>{f+='<text x="'+Math.min(312,Math.max(8,cx+m*k))+'" y="236" text-anchor="middle" font-size="9" fill="var(--mut)">'+m+' m</text>'});
+ document.getElementById('flr').innerHTML=f;
+ let a=-1,b=-1;F.forEach((v,i)=>{if(v>=fm*.1){if(a<0)a=i;b=i}});
+ document.getElementById('fst').innerHTML='<b>Vloeroppervlak '+P.W.toFixed(1)+' m breed: '+Math.round(Win/N*100)+'% van het licht</b> landt erin, '+Math.round((1-Win/N)*100)+'% valt erbuiten of gaat verloren. '+(a<0?'':'Lichtvlek boven 10% van de piek: ca. '+((b-a+1)*.2).toFixed(1)+' m breed. ')+'Blauwe balk = jouw vloeroppervlak, balken onder de vloer = relatieve verlichting.'}
+window.RES={tmn,tmx,wr};document.getElementById('warn').innerHTML=wr.map(w=>'<li>'+w+'</li>').join('')}
+run();
+(async()=>{try{let d=null;try{d=window.claude?await window.claude.use('downloads'):null}catch(e){}if(!d)d=FB;if(d){const b=document.getElementById('pdf');b.hidden=false;b.onclick=()=>mkpdf(d,b);const x=document.getElementById('dxf');x.hidden=false;x.onclick=()=>mkdxf(d,x)}}catch(e){}})();
+async function mkpdf(d,b){
+const C={pc:'#9fd0f2',ray:'#e39b00',pcb:'#1c2630',cab:'#d1503a',ac:'#1f6fb2',mut:'#5d6b78',ln:'#d3dce5',fg:'#14202b'},lab=b.textContent;b.textContent='Bezig...';
+try{const im=[];
+for(const id of ['sec','cht','flr']){const el=document.getElementById(id),vb=el.viewBox.baseVal,w=1400,h=Math.round(w*vb.height/vb.width);
+ const x=new XMLSerializer().serializeToString(el).replace(/var\(--(\w+)\)/g,(m,k)=>C[k]||'#000').replace('<svg ','<svg width="'+w+'" height="'+h+'" font-family="Helvetica,Arial,sans-serif" ');
+ const i=await new Promise((ok,no)=>{const g=new Image();g.onload=()=>ok(g);g.onerror=no;g.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(x)});
+ const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(i,0,0,w,h);
+ const s=atob(c.toDataURL('image/jpeg',.92).split(',')[1]),u=new Uint8Array(s.length);for(let k=0;k<s.length;k++)u[k]=s.charCodeAt(k);im.push({u,w,h})}
+const enc=s=>{let o='';for(const ch of String(s)){o+=ch.charCodeAt(0)>255?'?':ch}return o.replace(/[\\()]/g,m=>'\\'+m)};
+let cs='';const T=(f,z,x,y,t)=>{cs+='BT /F'+f+' '+z+' Tf 1 0 0 1 '+x+' '+y+' Tm ('+enc(t)+') Tj ET\n'};
+const wrap=(t,n)=>{const o=[];let l='';t.split(' ').forEach(w=>{if((l+' '+w).length>n){o.push(l);l=w}else l=l?l+' '+w:w});if(l)o.push(l);return o};
+const mode=['Batwing-lens','Gewone buis','Reflector + gewone buis'][P.M];
+T(2,16,40,810,'Lamp-lens rapport');T(1,9,40,796,new Date().toLocaleDateString('nl-NL')+' - '+mode);
+const h0=230*im[0].h/im[0].w,h1=265*im[1].h/im[1].w,h2=265*im[2].h/im[2].w,y1=770-h1;
+cs+='q 230 0 0 '+h0+' 40 '+(770-h0)+' cm /I0 Do Q\nq 265 0 0 '+h1+' 290 '+y1+' cm /I1 Do Q\nq 265 0 0 '+h2+' 290 '+(y1-10-h2)+' cm /I2 Do Q\n';
+const ln=[{h:'Uitvoering'},{l:'Type',v:mode}],RS=window.RES||{};G.forEach(([t,L])=>{if(t.startsWith('Lens')&&P.M!==0)return;if(t==='Reflector'&&P.M!==2)return;ln.push({h:t});L.forEach(([k,l])=>ln.push({l:l,v:String(P[k])}))});
+ln.push({h:'Afgeleid'},{l:'Binnendiameter buis (mm)',v:(P.D-2*P.t).toFixed(1)},{l:'Wanddikte min / max (mm)',v:RS.tmn!=null?RS.tmn.toFixed(1)+' / '+RS.tmx.toFixed(1):'-'});
+const top=Math.min(770-h0,y1-10-h2)-18;let sp=Math.ceil(ln.length/2);while(sp<ln.length&&!ln[sp].h)sp++;if(sp>=ln.length)sp=Math.ceil(ln.length/2);const half=Math.max(sp,ln.length-sp);
+ln.forEach((e,i)=>{const c=i<sp?0:1,r=c?i-sp:i,x=c?300:40,yy=top-r*12.5;if(e.h)T(2,9.5,x,yy,e.h);else{T(1,8.5,x+6,yy,e.l);T(1,8.5,x+190,yy,e.v)}});
+let y=top-half*12.5-14;
+['Meldingen: '+((RS.wr&&RS.wr.length)?RS.wr.join(' '):'geen'),document.getElementById('stat').textContent,document.getElementById('fst').textContent,'Indicatief 2D-model: brekingswet van Snell en totale terugkaatsing, zonder Fresnel-verlies, absorptie of toleranties. Controleer met een proefstuk of optische software.'].forEach(t=>{wrap(t,100).forEach(l=>{T(1,9,40,y,l);y-=12});y-=6});
+const parts=[],off=[];let pos=0;const add=u=>{if(typeof u==='string'){const a=new Uint8Array(u.length);for(let i=0;i<u.length;i++)a[i]=u.charCodeAt(i)&255;u=a}parts.push(u);pos+=u.length};
+const obj=(n,body)=>{off[n]=pos;add(n+' 0 obj\n'+body+'\nendobj\n')};
+add('%PDF-1.4\n');obj(1,'<</Type/Catalog/Pages 2 0 R>>');obj(2,'<</Type/Pages/Kids[3 0 R]/Count 1>>');
+obj(3,'<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1 5 0 R/F2 6 0 R>>/XObject<</I0 7 0 R/I1 8 0 R/I2 9 0 R>>>>/Contents 4 0 R>>');
+obj(4,'<</Length '+cs.length+'>>\nstream\n'+cs+'endstream');
+obj(5,'<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>');obj(6,'<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>');
+im.forEach((m,i)=>{off[7+i]=pos;add((7+i)+' 0 obj\n<</Type/XObject/Subtype/Image/Width '+m.w+'/Height '+m.h+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+m.u.length+'>>\nstream\n');add(m.u);add('\nendstream\nendobj\n')});
+const xr=pos;add('xref\n0 10\n0000000000 65535 f \n');for(let i=1;i<10;i++)add(String(off[i]).padStart(10,'0')+' 00000 n \n');
+add('trailer\n<</Size 10/Root 1 0 R>>\nstartxref\n'+xr+'\n%%EOF');
+const out=new Uint8Array(pos);let p=0;parts.forEach(u=>{out.set(u,p);p+=u.length});
+await d.save({filename:'lamp-lens-rapport.pdf',data:out});
+}catch(e){if(!e||e.code!=='declined')b.textContent='Mislukt, probeer opnieuw'}
+setTimeout(()=>{b.textContent=lab},2000);if(b.textContent==='Bezig...')b.textContent=lab}
+function settings(){const ln=['Uitvoering: '+['Batwing-lens','Gewone buis','Reflector + gewone buis'][P.M]];G.forEach(([t,L])=>{if(t.startsWith('Lens')&&P.M!==0)return;if(t==='Reflector'&&P.M!==2)return;L.forEach(([k,l])=>ln.push(l+': '+P[k]))});return ln}
+function prof(){const R=P.D/2,ri=R-P.t;if(P.M!==0)return{R,ri,pts:null};
+const yin=x=>{const a=Math.abs(x);return -R+P.d0+P.a*x*x+(a<P.cw?P.ch*(1-a/P.cw):0)},up=x=>Math.sqrt(Math.max(0,ri*ri-x*x)),v=x=>yin(x)<up(x);
+let lo=null,hi=null;for(let x=-ri;x<=ri;x+=.05){if(v(x)){if(lo===null)lo=x;hi=x}}
+if(lo===null)return{R,ri,pts:[]};
+let a=lo-.05,b=lo;if(a>=-ri){for(let i=0;i<40;i++){const m=(a+b)/2;if(v(m))b=m;else a=m}lo=b}
+a=hi;b=hi+.05;if(b<=ri){for(let i=0;i<40;i++){const m=(a+b)/2;if(v(m))a=m;else b=m}hi=a}
+const xs=[];for(let x=lo;x<hi;x+=.05)xs.push(x);xs.push(hi);[0,P.cw,-P.cw].forEach(x=>{if(x>lo&&x<hi)xs.push(x)});xs.sort((p,q)=>p-q);
+const pts=xs.map(x=>[x,yin(x)]),a1=Math.atan2(up(hi),hi),a0=Math.atan2(up(lo),lo);
+for(let i=1;i<120;i++){const t=a1+(a0-a1)*i/120;pts.push([ri*Math.cos(t),ri*Math.sin(t)])}
+return{R,ri,pts}}
+function crc32(u){if(!crc32.t){crc32.t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;crc32.t[n]=c>>>0}}let crc=-1;for(let i=0;i<u.length;i++)crc=crc32.t[(crc^u[i])&255]^(crc>>>8);return(crc^-1)>>>0}
+function zip(files){const te=new TextEncoder(),parts=[],cd=[];let pos=0;
+files.forEach(([name,txt])=>{const nm=te.encode(name),d=te.encode(txt),crc=crc32(d);
+ const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(12,23895,true);h.setUint32(14,crc,true);h.setUint32(18,d.length,true);h.setUint32(22,d.length,true);h.setUint16(26,nm.length,true);
+ const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(14,23895,true);c.setUint32(16,crc,true);c.setUint32(20,d.length,true);c.setUint32(24,d.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,pos,true);
+ parts.push(new Uint8Array(h.buffer),nm,d);pos+=30+nm.length+d.length;cd.push(new Uint8Array(c.buffer),nm)});
+const cs=pos;let cl=0;cd.forEach(u=>{parts.push(u);cl+=u.length});
+const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cl,true);e.setUint32(16,cs,true);parts.push(new Uint8Array(e.buffer));
+return new Blob(parts)}
+async function mkdxf(d,b){const lab=b.textContent;try{
+const p=prof(),f=v=>v.toFixed(4);let t='0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n';
+const circ=r=>'0\nCIRCLE\n8\nBUIS\n10\n0\n20\n0\n30\n0\n40\n'+f(r)+'\n';
+t+=circ(p.R);
+if(p.pts===null)t+=circ(p.ri);else if(p.pts.length){t+='0\nPOLYLINE\n8\nBUIS\n66\n1\n70\n1\n';p.pts.forEach(q=>{t+='0\nVERTEX\n8\nBUIS\n10\n'+f(q[0])+'\n20\n'+f(q[1])+'\n30\n0\n'});t+='0\nSEQEND\n8\nBUIS\n'}
+t+='0\nENDSEC\n0\nEOF\n';
+await d.save({filename:'profiel-buis.zip',data:zip([['profiel-buis.dxf',t],['instellingen.txt','Lamp-lens profiel (mm)\n'+settings().join('\n')+'\n']])})
+}catch(e){if(!e||e.code!=='declined')b.textContent='Mislukt, probeer opnieuw'}
+setTimeout(()=>{b.textContent=lab},2000)}
+</script>
+<script>(function(){
+const $=id=>document.getElementById(id),L=[];for(let l=380;l<=780;l+=5)L.push(l);
+const g=(l,m,a,b)=>{const t=(l-m)/(l<m?a:b);return Math.exp(-.5*t*t)};
+const cx=l=>1.056*g(l,599.8,37.9,31)+.362*g(l,442,16,26.7)-.065*g(l,501.1,20.4,26.2),cy=l=>.821*g(l,568.8,46.9,40.5)+.286*g(l,530.9,16.3,31.1),cz=l=>1.217*g(l,437,11.8,36)+.681*g(l,459,26,13.8);
+const ga=(l,m,s)=>Math.exp(-.5*((l-m)/s)**2),pre=(b,pc,pa,rc,ra)=>l=>b*ga(l,450,9)+pa*ga(l,pc,55)+ra*ga(l,rc,24);
+const PR={warm:pre(.45,590,.95,635,.55),neu:pre(.7,570,1,625,.25),cool:pre(1,555,.85,630,0)};
+const RN=['Ra'];for(let i=1;i<=15;i++)RN.push('R'+i);
+RN.forEach((n,i)=>{const d=document.createElement('div');d.innerHTML='<small style="font:11px system-ui,sans-serif;color:var(--mut)">'+n+'</small><input type="number" step="any" id="r'+i+'">';$('s_rg').appendChild(d)});
+function parse(t){const p=[];t.split('\n').forEach(r=>{r=r.trim();if(!r)return;let a=r.split(/[;\t ]+/);if(a.length<2)a=r.split(',');a=a.map(v=>parseFloat(v.replace(',','.')));if(a.length>=2&&isFinite(a[0])&&isFinite(a[1]))p.push([a[0],a[1]])});p.sort((u,v)=>u[0]-v[0]);return p}
+const itp=(p,l)=>{if(!p.length||l<p[0][0]||l>p[p.length-1][0])return 0;let i=1;while(i<p.length-1&&p[i][0]<l)i++;const a=p[i-1],b=p[i];return b[0]===a[0]?a[1]:a[1]+(b[1]-a[1])*(l-a[0])/(b[0]-a[0])};
+const nn=l=>1.5555+10000/(l*l);
+function Tm(l,t,th,y){const n=nn(l),s=Math.sin(th*Math.PI/180)/n,Lp=t/Math.sqrt(1-s*s),a=.015+.35*Math.exp(-(l-385)/6)+y*.3*Math.exp(-(l-380)/70),A=Math.exp(-a*Lp),R=((n-1)/(n+1))**2;return(1-R)**2*A/(1-R*R*A*A)}
+const xyz=sp=>{let X=0,Y=0,Z=0;L.forEach((l,i)=>{X+=sp[i]*cx(l);Y+=sp[i]*cy(l);Z+=sp[i]*cz(l)});const S=X+Y+Z||1;return{x:X/S,y:Y/S,Y}};
+const cct=c=>{const n=(c.x-.332)/(.1858-c.y);return 449*n**3+3525*n*n+6823.3*n+5520.33};
+let OUT=null;
+function calc(){if($('s_link').checked)$('s_t').value=P.M===0?P.d0:P.t;$('s_t').disabled=$('s_link').checked;
+  document.querySelectorAll('#tab2 input[type=range]').forEach(e=>{e.parentNode.querySelector('b').textContent=e.value+(e.id==='s_t'?' mm':e.id==='s_tm'?'°':'')});
+ const wr=[];let sp;
+ if($('s_pre').value==='own'){const p=parse($('s_sp').value);sp=L.map(l=>Math.max(0,itp(p,l)));if(!p.length)wr.push('Plak je spectrum in het veld, of kies een voorbeeld.')}
+ else sp=L.map(PR[$('s_pre').value]);
+ const mx=Math.max(...sp);if(mx<=0){$('s_res').innerHTML='';$('s_ch').innerHTML='';OUT=null;$('s_warn').innerHTML=wr.map(w=>'<li>'+w+'</li>').join('');return}
+ const t=+$('s_t').value,tm=+$('s_tm').value,y=+$('s_y').value,tp=parse($('s_tr').value),cu=tp.length>1;
+ const T=L.map(l=>{if(cu){let v=itp(tp,l);if(Math.max(...tp.map(q=>q[1]))>1.5)v/=100;return Math.min(1,Math.max(0,v))}
+  let s=0;const k=tm>0?10:1;for(let i=0;i<k;i++)s+=Tm(l,t,tm>0?tm*(i+.5)/k:0,y);return s/k});
+ const out=sp.map((v,i)=>v*T[i]);OUT={sp,T,out};
+ const a=xyz(sp),b=xyz(out),f=(v,d)=>v.toFixed(d);
+ const sum=v=>v.reduce((p,q)=>p+q,0);
+ const rv=RN.map((n,i)=>[n,$('r'+i).value]).filter(q=>q[1]!=='');
+ $('s_res').innerHTML='<table><tr><th></th><th>LED</th><th>Na materiaal</th></tr>'
+ +'<tr><td>Kleurpunt x, y</td><td>'+f(a.x,4)+', '+f(a.y,4)+'</td><td>'+f(b.x,4)+', '+f(b.y,4)+'</td></tr>'
+ +'<tr><td>Kleurtemperatuur (K)</td><td>'+Math.round(cct(a))+'</td><td>'+Math.round(cct(b))+'</td></tr>'
+ +'<tr><td>Energie doorgelaten</td><td></td><td>'+f(sum(out)/sum(sp)*100,1)+'%</td></tr>'
+ +'<tr><td>Licht doorgelaten</td><td></td><td>'+f(b.Y/a.Y*100,1)+'%</td></tr>'
+ +'<tr><td>Doorlaat 450 / 550 / 650 nm</td><td></td><td>'+[450,550,650].map(l=>Math.round(T[(l-380)/5]*100)).join(' / ')+'%</td></tr></table>'
+ +(rv.length?'<p class="n" style="margin:8px 0 0"><b>R-waarden LED:</b> '+rv.map(q=>q[0]+' '+q[1]).join(', ')+'</p>':'');
+ if(Math.abs(cct(b)-cct(a))>150)wr.push('De kleurtemperatuur verschuift met '+Math.round(cct(b)-cct(a))+' K door het materiaal.');
+ if(cu)wr.push('Je eigen doorlaat is gebruikt: dikte, hoek en vergeling doen niet mee.');
+ $('s_warn').innerHTML=wr.map(w=>'<li>'+w+'</li>').join('');
+ const x0=26,x1=312,y0=12,y1=138,X=l=>x0+(l-380)/400*(x1-x0),Y=v=>y1-v*(y1-y0),PL=v=>'M'+L.map((l,i)=>X(l).toFixed(1)+' '+Y(v[i]).toFixed(1)).join('L');
+ const ni=sp.map(v=>v/mx),no=out.map(v=>v/mx);
+ let s='';[0,.5,1].forEach(v=>{s+='<line x1="'+x0+'" x2="'+x1+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--ln)" stroke-width=".6"/><text x="22" y="'+(Y(v)+3)+'" text-anchor="end" font-size="8" fill="var(--mut)">'+v*100+'%</text>'});
+ [400,500,600,700,780].forEach(l=>{s+='<text x="'+X(l)+'" y="152" text-anchor="middle" font-size="8" fill="var(--mut)">'+l+'</text>'});
+ s+='<text x="170" y="165" text-anchor="middle" font-size="8" fill="var(--mut)">golflengte (nm), relatief t.o.v. de piek van de LED</text>';
+ s+='<path d="'+PL(ni)+'L'+X(780)+' '+y1+'L'+X(380)+' '+y1+'Z" fill="var(--ac)" fill-opacity=".18"/><path d="'+PL(ni)+'" fill="none" stroke="var(--ac)" stroke-width="1"/>';
+ s+='<path d="'+PL(T)+'" fill="none" stroke="var(--mut)" stroke-width="1" stroke-dasharray="3 3"/><path d="'+PL(no)+'" fill="none" stroke="var(--ray)" stroke-width="2"/>';
+ s+='<text x="'+(x1-2)+'" y="22" text-anchor="end" font-size="8.5" fill="var(--ac)">blauw: LED</text><text x="'+(x1-2)+'" y="32" text-anchor="end" font-size="8.5" fill="var(--ray)">oranje: na materiaal</text><text x="'+(x1-2)+'" y="42" text-anchor="end" font-size="8.5" fill="var(--mut)">stippel: doorlaat</text>';
+ $('s_ch').innerHTML=s}
+document.querySelectorAll('#tab2 input,#tab2 select,#tab2 textarea').forEach(e=>e.addEventListener('input',()=>{if(e.id==='s_sp'&&e.value.trim())$('s_pre').value='own';calc()}));
+calc();
+(async()=>{try{let d=null;try{d=window.claude?await window.claude.use('downloads'):null}catch(e){}if(!d)d=FB;if(d){const b=$('s_csv');b.hidden=false;b.onclick=async()=>{if(!OUT)return;const r=['nm,led,doorlaat,uit'];L.forEach((l,i)=>r.push(l+','+OUT.sp[i].toFixed(5)+','+OUT.T[i].toFixed(4)+','+OUT.out[i].toFixed(5)));try{await d.save({filename:'led-spectrum-uit.csv',data:r.join('\n')})}catch(e){}}}}catch(e){}})();
+
+window.specCalc=calc})();
+function tab(n){document.getElementById('tab1').hidden=n!==1;document.getElementById('tab2').hidden=n!==2;document.querySelectorAll('.tb button').forEach((b,i)=>b.setAttribute('aria-pressed',i+1===n));if(n===2&&window.specCalc)specCalc()}</script></body></html>
